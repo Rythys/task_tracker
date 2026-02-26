@@ -234,10 +234,10 @@ class TestTaskComparison:
         assert bug1 >= bug2
 
     def test_sortable(self):
-        critical = Bug(title="C", severity=1, priority=Priority.CRITICAL)
-        low = Bug(title="L", severity=1, priority=Priority.LOW)
-        high = Bug(title="H", severity=1, priority=Priority.HIGH)
-        medium = Bug(title="M", severity=1, priority=Priority.MEDIUM)
+        critical = Bug(title="Critical bug", severity=1, priority=Priority.CRITICAL)
+        low = Bug(title="Low bug", severity=1, priority=Priority.LOW)
+        high = Bug(title="High bug", severity=1, priority=Priority.HIGH)
+        medium = Bug(title="Medium bug", severity=1, priority=Priority.MEDIUM)
 
         sorted_tasks = sorted([critical, low, high, medium])
         priorities = [t.priority for t in sorted_tasks]
