@@ -32,17 +32,35 @@ class User(Serializable, Displayable):
 
     def to_dict(self) -> dict:
         """Сериализовать пользователя в словарь."""
-        raise NotImplementedError("TODO: Реализуйте to_dict для User")
+        return {"id": self.id, "name": self.name, "role": self.role.value}
 
     @classmethod
     def from_dict(cls, data: dict) -> "User":
         """Создать пользователя из словаря."""
-        raise NotImplementedError("TODO: Реализуйте from_dict для User")
+        user = cls(data["name"], Role(data.get("role", Role.DEVELOPER)))
+        user.id = data["id"]
+        return user
 
     # ── Displayable ─────────────────────────────────────────────────
 
     def short_display(self) -> str:
-        raise NotImplementedError("TODO: Реализуйте short_display для User")
+        return f"name = {self.name}, role = {self.role.value}"
 
     def full_display(self) -> str:
-        raise NotImplementedError("TODO: Реализуйте full_display для User")
+        return f"id = {self.id}, name = {self.name}, role = {self.role.value}"
+
+    # ── Magic ─────────────────────────────────────────────────
+
+    def __str__(self) -> str:
+        return f"{self.name} ({self.role})"
+
+    def __repr__(self) -> str:
+        return f"User(id='{self.id}', name='{self.name}', role='{self.role}')"
+
+    def __eq__(self, other):
+        if not isinstance(other, User):
+            return False
+        return self.id == other.id
+
+    def __hash__(self):
+        return hash(self.id)

@@ -7,6 +7,8 @@
 
 import argparse
 
+from task_tracker.cli import run_cli
+
 
 def parse_args(args: list[str] | None = None) -> argparse.Namespace:
     """Разобрать аргументы командной строки.
@@ -20,12 +22,18 @@ def parse_args(args: list[str] | None = None) -> argparse.Namespace:
     Returns:
         argparse.Namespace с полем data
     """
-    raise NotImplementedError("TODO: Реализуйте parse_args")
+
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--data", type=str, default="data.json")
+    parsed_args = parser.parse_args(args)
+    return parsed_args
 
 
 def main() -> None:
     """Главная функция: парсинг аргументов → запуск CLI."""
-    raise NotImplementedError("TODO: Реализуйте main")
+
+    inp_args = parse_args()
+    run_cli(inp_args.data)
 
 
 if __name__ == "__main__":

@@ -32,11 +32,26 @@ class Bug(Task):
 
     def estimate(self) -> float:
         """Оценка: severity * 2 часов."""
-        raise NotImplementedError("TODO: Реализуйте estimate для Bug")
+        return self.severity * 2
 
     def label(self) -> str:
         """Метка: [BUG]"""
-        raise NotImplementedError("TODO: Реализуйте label для Bug")
+        return f"[{self.__class__.__name__.upper()}]"
+
+    def to_dict(self) -> dict:
+        data = super().to_dict()
+        data["severity"] = self.severity
+        data["steps_to_reproduce"] = self.steps_to_reproduce
+        return data
+
+    @classmethod
+    def from_dict(cls, data: dict) -> "Bug":
+        bug = super().from_dict(data)
+
+        bug.severity = data.get("severity")
+        bug.steps_to_reproduce = data.get("steps_to_reproduce")
+
+        return bug
 
 
 class Feature(Task):
@@ -67,11 +82,26 @@ class Feature(Task):
 
     def estimate(self) -> float:
         """Оценка: (business_value + complexity) * 1.5 часов."""
-        raise NotImplementedError("TODO: Реализуйте estimate для Feature")
+        return (self.business_value + self.complexity) * 1.5
 
     def label(self) -> str:
         """Метка: [FEATURE]"""
-        raise NotImplementedError("TODO: Реализуйте label для Feature")
+        return f"[{self.__class__.__name__.upper()}]"
+
+    def to_dict(self) -> dict:
+        data = super().to_dict()
+        data["business_value"] = self.business_value
+        data["complexity"] = self.complexity
+        return data
+
+    @classmethod
+    def from_dict(cls, data: dict) -> "Feature":
+        feature = super().from_dict(data)
+
+        feature.business_value = data.get("business_value")
+        feature.complexity = data.get("complexity")
+
+        return feature
 
 
 class Epic(Task):
@@ -92,12 +122,34 @@ class Epic(Task):
         subtasks: list | None = None,
     ):
         super().__init__(title, description, priority)
-        self.subtasks: list[Task] = subtasks if subtasks is not None else []
+        self.subtasks = subtasks if subtasks is not None else []
 
     def estimate(self) -> float:
         """Оценка: сумма estimate() подзадач × 1.2 (коэффициент координации)."""
-        raise NotImplementedError("TODO: Реализуйте estimate для Epic")
+        return sum(task.estimate() for task in self.subtasks) * 1.2
 
     def label(self) -> str:
         """Метка: [EPIC]"""
-        raise NotImplementedError("TODO: Реализуйте label для Epic")
+        return f"[{self.__class__.__name__.upper()}]"
+
+    def to_dict(self) -> dict:
+        data = super().to_dict()
+        data["subtasks"] = []
+        for subtask in self.subtasks:
+            data["subtasks"].append(subtask.to_dict())
+        return data
+
+    @classmethod
+    def from_dict(cls, data: dict) -> "Epic":
+        epic = super().from_dict(data)
+        epic.subtasks = []
+
+        subtasks_list = [t for t in data.get("subtasks", [])]
+        for subtask in subtasks_list:
+            if subtask["type"] == "bug":
+                epic.subtasks.append(Bug.from_dict(subtask))
+            if subtask["type"] == "feature":
+                epic.subtasks.append(Feature.from_dict(subtask))
+            if subtask["type"] == "epic":
+                epic.subtasks.append(Epic.from_dict(subtask))
+        return epic
