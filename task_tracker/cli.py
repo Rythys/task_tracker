@@ -4,7 +4,6 @@
 главное меню, подменю, ввод данных, вывод отчётов.
 """
 
-from task_tracker import global_states
 from task_tracker.cli_menu.project_menu import delete_project, make_project, project_report
 from task_tracker.cli_menu.task_menu import (
     assign_user,
@@ -16,6 +15,7 @@ from task_tracker.cli_menu.task_menu import (
     show_task_details,
 )
 from task_tracker.cli_menu.user_menu import delete_user, make_new_user, show_user, tasks_by_asignee
+from task_tracker.models.project import Project
 from task_tracker.storage import load_data, save_data
 
 
@@ -153,7 +153,7 @@ def run_cli(data_file: str = "data.json") -> None:
     current_screen = main_menu
     while current_screen is not None or current_screen:
         if current_screen == save_data:
-            save_data(global_states.projects.values(), data_file)
+            save_data(Project.projects.values(), data_file)
             print("Данные сохранены. Выход.")
             break
         current_screen = current_screen()

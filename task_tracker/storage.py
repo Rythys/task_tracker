@@ -5,7 +5,6 @@
 
 import json
 
-from task_tracker import global_states
 from task_tracker.exceptions import StorageError
 from task_tracker.models.project import Project
 
@@ -71,7 +70,7 @@ def load_data(filepath: str) -> list:
         projects_dict = data["projects"]
         projects_list = [Project.from_dict(p) for p in projects_dict]
         for project in projects_list:
-            global_states.projects[project.name] = project
+            Project.projects[project.name] = project
         return projects_list
     except FileNotFoundError:
         return []

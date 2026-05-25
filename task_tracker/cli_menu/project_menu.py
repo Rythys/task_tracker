@@ -1,4 +1,3 @@
-from task_tracker import global_states
 from task_tracker.cli_menu.task_menu import make_subtask
 from task_tracker.cli_menu.user_menu import make_user
 from task_tracker.models.project import Project
@@ -16,7 +15,6 @@ def make_project():
         if is_subtasks != "y":
             break
         task_title, task = make_subtask()
-        new_project.tasks.append(task)
 
     default_is_members = "n"
     is_members = "y"
@@ -27,7 +25,6 @@ def make_project():
             break
         member = make_user()
         new_project.members.append(member)
-    global_states.projects[project_name] = new_project
     from task_tracker.cli import projects_menu
 
     return projects_menu
@@ -35,7 +32,7 @@ def make_project():
 
 def delete_project():
     project_name = input("Введите название проекта: ")
-    print(global_states.projects.pop(project_name, "Проектов с таким названием нет"))
+    print(Project.projects.pop(project_name, "Проектов с таким названием нет"))
     from task_tracker.cli import projects_menu
 
     return projects_menu
@@ -43,7 +40,7 @@ def delete_project():
 
 def project_report():
     project_name = input("Введите название проекта: ")
-    project = global_states.projects[project_name]
+    project = Project.projects[project_name]
     print(f"=== Сводка: {project_name} ===\nВсего задач: {len(project)}\n")
 
     stats_by_status = {"open": 0, "in_progress": 0, "in_review": 0, "done": 0, "closed": 0}

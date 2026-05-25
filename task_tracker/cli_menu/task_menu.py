@@ -1,16 +1,12 @@
-from task_tracker import global_states
 from task_tracker.cli_menu.user_menu import make_user
-from task_tracker.enums import (
-    priority_to_str,
-    set_prority_from_str,
-    set_status_from_str,
-)
+from task_tracker.enums import Priority, Status
+from task_tracker.models.base import Task
 from task_tracker.models.tasks import Bug, Epic, Feature
 
 
 def delete_task():
     task_title = input("Введите название задачи: ")
-    print(global_states.tasks.pop(task_title, "Задач с таким названием нет"))
+    print(Task.tasks.pop(task_title, "Задач с таким названием нет"))
     from task_tracker.cli import tasks_menu
 
     return tasks_menu
@@ -18,7 +14,7 @@ def delete_task():
 
 def show_task_details():
     task_title = input("Введите название задачи: ")
-    if task := global_states.tasks.get(task_title):
+    if task := Task.tasks.get(task_title):
         print(task.full_display())
     else:
         print("\nОшибка: Задачи с таким названем не существует!\n")
@@ -33,12 +29,12 @@ def assign_user():
         user = make_user()
     else:
         user_name = input("Введите имя исполнителя: ")
-        user = global_states.users.get(user_name)
+        user = Task.users.get(user_name)
     task_title = input("Введите название задачи: ")
-    if global_states.tasks.get(task_title):
-        global_states.tasks[task_title].assignee = user
+    if Task.tasks.get(task_title):
+        Task.tasks[task_title].assignee = user
         print(
-            f"{global_states.tasks[task_title].assignee} назначен исполнителем проекта {task_title}"
+            f"{Task.tasks[task_title].assignee} назначен исполнителем проекта {task_title}"
         )
     else:
         print("Ошибка: Задач с таким названием не существует!\n")
@@ -52,8 +48,8 @@ def change_task_status():
     task_title = input("Введите название задачи: ")
     new_status_str = input("Введите новый статус: ")
 
-    new_status = set_status_from_str(new_status_str)
-    global_states.tasks[task_title].change_status(new_status)
+    new_status = Status(new_status_str)
+    Task.tasks[task_title].change_status(new_status)
 
     from task_tracker.cli import tasks_menu
 
@@ -71,10 +67,10 @@ def filtered_tasks_list():
 
     filtered_tasks = []
 
-    for task in global_states.tasks.values():
+    for task in Task.tasks.values():
         if status_str and task._status.value != status_str:
             continue
-        if priority and task.priority != set_prority_from_str(priority):
+        if priority and task.priority != Priority(priority):
             continue
         if tasks_type and task.label().strip("[]").lower() != tasks_type:
             continue
@@ -84,13 +80,13 @@ def filtered_tasks_list():
     if not sort_tasks_by or filtered_tasks and sort_tasks_by == "priority":
         filtered_tasks.sort(key=lambda t: t.priority.value, reverse=True)
         for task in filtered_tasks:
-            print(f"{priority_to_str(task.priority)}: {task.short_display()}\n")
+            print(f"{task.priority.value}: {task.short_display()}\n")
 
     if filtered_tasks and sort_tasks_by == "created_at":
         filtered_tasks.sort(key=lambda t: t.created_at)
         for task in filtered_tasks:
             print(f"{task.created_at}: {task.short_display()}\n")
-    print(filtered_tasks)
+
     if filtered_tasks and sort_tasks_by == "estimate":
         filtered_tasks.sort(key=lambda t: t.estimate(), reverse=True)
         for task in filtered_tasks:
@@ -103,10 +99,8 @@ def filtered_tasks_list():
 
 def make_task():
     task_title, task = make_subtask()
-    if task:
-        global_states.tasks[task_title] = task
-    from task_tracker.cli import tasks_menu
 
+    from task_tracker.cli import tasks_menu
     return tasks_menu
 
 
@@ -115,10 +109,13 @@ def make_subtask():
     task_title = input("Введите название задачи: ")
     task_description = input("Введите описание задачи: ")
     default_type = "medium"
-
-    user_input = input(f"Введите приоритетность задачи (low, medium, high) [{default_type}]: ")
+    user_input = input(
+        f"Введите приоритетность задачи (low, medium, high, critical)"
+        f"[{default_type}]: "
+    )
     task_priority_str = user_input if user_input else default_type
-    task_priority = set_prority_from_str(task_priority_str)
+
+    task_priority = Priority[task_priority_str.upper()]
 
     task_type = input("Введите тип задачи (bug, feature, epic): ")
     if task_type == "bug":
@@ -167,27 +164,29 @@ def etimate_report():
     bug_estimate_sum = sum(
         map(
             lambda t: t.estimate(),
-            filter(lambda t: t.label() == "[BUG]", global_states.tasks.values()),
+            filter(lambda t: t.label() == "[BUG]", Task.tasks.values()),
         )
     )
     feature_estimate_sum = sum(
         map(
             lambda t: t.estimate(),
-            filter(lambda t: t.label() == "[FEATURE]", global_states.tasks.values()),
+            filter(lambda t: t.label() == "[FEATURE]", Task.tasks.values()),
         )
     )
     epic_estimate_sum = sum(
         map(
             lambda t: t.estimate(),
-            filter(lambda t: t.label() == "[EPIC]", global_states.tasks.values()),
+            filter(lambda t: t.label() == "[EPIC]", Task.tasks.values()),
         )
     )
 
     estimations_sum = bug_estimate_sum + feature_estimate_sum + epic_estimate_sum
 
-    etimate_top_5 = list(global_states.tasks.values())
+    etimate_top_5 = list(Task.tasks.values())
+    print(etimate_top_5)
     if etimate_top_5:
-        etimate_top_5.sort(key=lambda t: t.estimate(), reverse=True)[: len(etimate_top_5)]
+        etimate_top_5.sort(key=lambda t: t.estimate(), reverse=True)
+        etimate_top_5 = etimate_top_5[:5]
 
     print(
         f"Общая оценка: {estimations_sum} часов\n\
@@ -198,8 +197,8 @@ def etimate_report():
     "
     )
     print("Топ-5 самых трудоёмких:\n")
-    for task in enumerate(etimate_top_5):
-        print(f"{task.label()} {task.title} — {task.estimate} ч\n")
+    for i, task in enumerate(etimate_top_5):
+        print(f"{i+1}. {task.label()} {task.title} — {task.estimate()} ч\n")
 
     from task_tracker.cli import report_menu
 

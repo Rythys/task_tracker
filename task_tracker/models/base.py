@@ -4,11 +4,11 @@ import uuid
 from abc import abstractmethod
 from datetime import datetime
 
-from task_tracker import global_states
-from task_tracker.enums import VALID_TRANSITIONS, Priority, Status, priority_to_str
+from task_tracker.enums import VALID_TRANSITIONS, Priority, Status
 from task_tracker.exceptions import InvalidStatusTransitionError, ValidationError
 from task_tracker.interfaces import Displayable, Serializable
 from task_tracker.mixins import HistoryMixin, TimestampMixin
+from task_tracker.models.user import User
 
 
 class Task(
@@ -42,6 +42,8 @@ class Task(
         - title валидируется через property setter (3–128 символов)
     """
 
+    tasks = dict()
+
     def __init__(
         self,
         title: str,
@@ -57,6 +59,8 @@ class Task(
         self.assignee = None
         self.created_at = datetime.now()
         self.updated_at = datetime.now()
+
+        Task.tasks[self.title] = self
 
     # ── title property ──────────────────────────────────────────────
 
@@ -144,7 +148,7 @@ class Task(
         task.id = data["id"]
         task._status = Status(data["status"])
         task.assignee = (
-            global_states.users_by_id.get(data["assignee_id"]) if data.get("assignee_id") else None
+            User.users_by_id.get(data["assignee_id"]) if data.get("assignee_id") else None
         )
         task.created_at = datetime.fromisoformat(data["created_at"])
         task.updated_at = datetime.fromisoformat(data["updated_at"])
@@ -157,7 +161,7 @@ class Task(
         """Краткое представление: [LABEL] title — PRIORITY — STATUS"""
         return (
         f"{self.label()} {self.title} - "
-        f"{priority_to_str(self.priority)} - {self.status.value}"
+        f"{self.priority.value} - {self.status.value}"
     )
 
     def full_display(self) -> str:
@@ -187,7 +191,7 @@ updated_at:  {self.updated_at}"
         f"{self.__class__.__name__}("
         f"id='{self.id}', "
         f"title='{self.title}', "
-        f"status='{self.status.value}'"  # Лучше использовать .value для статуса
+        f"status='{self.status}'"
         f")"
     )
 

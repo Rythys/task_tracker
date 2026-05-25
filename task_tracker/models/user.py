@@ -21,12 +21,18 @@ class User(Serializable, Displayable):
         __eq__, __hash__: по id
     """
 
+    users = dict()
+    users_by_id = dict()
+
     name = StringLengthValidator(min_length=2, max_length=64)
 
     def __init__(self, name: str, role: Role = Role.DEVELOPER):
         self.id = str(uuid.uuid4())
         self.name = name
         self.role = role
+
+        User.users[self.name] = self
+        User.users_by_id[self.id] = self
 
     # ── Serializable ────────────────────────────────────────────────
 

@@ -25,6 +25,7 @@ class Project(Serializable, Displayable):
         __str__: название проекта (N задач, M участников)
         __repr__: Project(id='...', name='...')
     """
+    projects = dict()
 
     name = StringLengthValidator(min_length=3, max_length=128)
 
@@ -33,6 +34,8 @@ class Project(Serializable, Displayable):
         self.name = name
         self.tasks: list = []
         self.members: list = []
+
+        Project.projects[self.name] = self
 
     # ── Serializable ────────────────────────────────────────────────
 
